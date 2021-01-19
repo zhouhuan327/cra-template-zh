@@ -1,12 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import styled from "styled-components";
+const P = styled.p`
+  color: red;
+  display: inline-block;
+`;
 function App() {
-  const [n, useN] = useState<number>(0);
+  const [n] = useState<number>(0);
+  useEffect(() => {
+    console.log(n);
+  }, []);
   return (
     <div className="App">
       <header className="App-header">
-        <p>
+        <P>
           Edit <code>src/App.tsx</code> and save to reload.
-        </p>
+        </P>
         <a
           className="App-link"
           href="https://reactjs.org"
