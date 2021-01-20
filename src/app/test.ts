@@ -1,18 +1,21 @@
 import styled from "styled-components";
+// lint sc component test
 const P = styled.p`
-  color: red;
   display: inline-block;
+  color: red;
   .insert {
     display: block;
   }
 
   .alter:after {
+    display: block;
+    background-color: red;
     color: red;
     content: "example";
-    display: block;
   }
 
   .delete {
     display: block;
   }
 `;
+export default P;

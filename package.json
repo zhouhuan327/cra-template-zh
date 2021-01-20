@@ -8,10 +8,11 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "checkTs": "tsc --noEmit",
-    "eslint": "eslint --ext js,ts,tsx",
-    "lint": "yarn eslint -- src",
-    "lint:fix": "yarn eslint -- --fix src",
-    "lint:css": "stylelint './src/**/*.{ts,tsx}'"
+    "lint": "eslint ./src/**/*.{ts,tsx} && stylelint ./src/**/*.{ts,tsx,css}",
+    "eslint": "eslint ./src/**/*.{ts,tsx}",
+    "stylelint": "stylelint ./src/**/*.{ts,tsx,css}",
+    "eslint:fix": "eslint src/**/*.{ts,tsx} --fix",
+    "stylelint:fix": "stylelint src/**/*.{ts,tsx,css} --fix"
   },
   "dependencies": {
     "@types/node": "^12.0.0",
@@ -32,14 +33,23 @@
     "husky": "^4.3.8",
     "lint-staged": "^10.5.3",
     "prettier": "^2.2.1",
+    "prettier-stylelint": "^0.4.2",
     "stylelint": "^13.8.0",
+    "stylelint-config-idiomatic-order": "^8.1.0",
     "stylelint-config-recommended": "^3.0.0",
     "stylelint-config-styled-components": "^0.1.1",
+    "stylelint-order": "^4.1.0",
+    "stylelint-prettier": "^1.1.2",
     "stylelint-processor-styled-components": "^1.10.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "npm run eslint -- --fix"
+    "src/**/*.{ts,tsx}": [
+      "eslint  --fix",
+      "git add ."
+    ],
+    "src/**/*.{ts,tsx,css}": [
+      "stylelint  --fix",
+      "git add ."
     ],
     "*.{md,json}": [
       "prettier --write"

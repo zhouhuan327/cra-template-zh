@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 const P = styled.p`
-  color: red;
   display: inline-block;
+  color: red;
 `;
 function App() {
   const [n] = useState<number>(0);

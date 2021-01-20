@@ -1,0 +1,7 @@
+.test {
+  position: relative;
+  display: inline;
+  background-color: red;
+  color: red;
+  content: "";
+}
