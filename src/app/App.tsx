@@ -6,9 +6,7 @@ const P = styled.p`
 `;
 function App() {
   const [n] = useState<number>(0);
-  useEffect(() => {
-    console.log(n);
-  }, []);
+  useEffect(() => {}, []);
   return (
     <div className="App">
       <header className="App-header">
