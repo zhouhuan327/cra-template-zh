@@ -3,37 +3,39 @@ const https = require("https");
 const unpack = require("tar-pack").unpack;
 const fs = require("fs-extra");
 const path = require("path");
-const root = process.cwd();
-const tempFolderName = "tempFolder";
 const chalk = require("chalk");
+
 const log = console.log;
+const tempFolderName = "tempFolder";
+const root = process.cwd();
+
 async function run() {
   try {
-    log(chalk.bgMagenta("start sync"));
-    const packageURL = await getTemplateUrl();
-    log(chalk.magenta(`repo address: ${packageURL}`));
-    if (!checkIsInRoot()) {
-      return;
-    }
     const templatePath = path.join(root, "sync-script", tempFolderName);
-    if (!fs.existsSync(templatePath)) {
-      let stream;
-      if (/^http/.test(packageURL)) {
-        log(chalk.green("pulling template..."));
-        stream = hyperquest(packageURL);
-      }
-      log(chalk.green("unpack template file..."));
-      await extractStream(
-        stream,
-        path.join(root, "sync-script", tempFolderName),
-      );
+    if (!fs.existsSync(path.join(root, "package.json"))) {
+      throw new Error("package.json not found");
+    }
+    if (fs.existsSync(templatePath)) {
+      fs.removeSync(path.join(root, "sync-script", tempFolderName));
     }
 
-    copyFiles(templatePath);
+    const packageURL = await getTemplateUrl();
+    log(chalk.green(`[1/4] 📌 get npm address: ${packageURL}`));
 
-    fs.removeSync(path.join(root, "sync-script", tempFolderName));
+    const stream = hyperquest(packageURL);
+    log(chalk.green(`[2/4] 🔍 Fetching package...`));
+
+    await extractStream(stream, templatePath);
+    log(chalk.green(`[3/4] ⚡️ unpack file...`));
+
+    // 这里不知道为什么直接执行会有几率找不到文件
+    setTimeout(() => {
+      log(chalk.green("[4/4] 🔨 copy files..."));
+      copyFiles(templatePath);
+      fs.removeSync(path.join(root, "sync-script", tempFolderName));
+    }, 100);
   } catch (e) {
-    chalk.red(e);
+    log(chalk.red(e));
   }
 }
 // 复制配置文件
@@ -50,7 +52,7 @@ function copyFiles(templatePath) {
     if (fs.existsSync(filePath)) {
       fs.copySync(filePath, path.join(root, filename));
     } else {
-      log(chalk.bgYellow(filename + " not exist in template"));
+      log(filename + "not exist in template");
     }
   }
 }
@@ -61,19 +63,13 @@ function extractStream(stream, dest) {
       unpack(dest, err => {
         if (err) {
           reject(err);
-        } else {
-          resolve(dest);
         }
       }),
     );
+    stream.on("end", () => {
+      resolve();
+    });
   });
-}
-function checkIsInRoot() {
-  const packageExists = fs.existsSync(path.join(root, "package.json"));
-  if (!packageExists) {
-    throw new Error("package不存在");
-  }
-  return true;
 }
 
 function getTemplateUrl() {
