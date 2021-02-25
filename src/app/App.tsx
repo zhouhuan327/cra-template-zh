@@ -1,28 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
+import { Layout } from "antd";
 const P = styled.p`
   display: inline-block;
   color: red;
 `;
+const { Header, Footer, Content } = Layout;
 function App() {
-  const [n] = useState<number>(0);
-  useEffect(() => {}, []);
   return (
-    <div className="App">
-      <header className="App-header">
-        <P>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </P>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Layout>
+      <Header></Header>
+      <Content>Content</Content>
+      <Footer>Footer</Footer>
+    </Layout>
   );
 }
 
