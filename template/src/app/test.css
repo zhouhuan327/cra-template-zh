@@ -1,7 +1,9 @@
+ /* lint css  test */
 .test {
   position: relative;
   display: inline;
   background-color: red;
   color: red;
+
   content: "";
 }

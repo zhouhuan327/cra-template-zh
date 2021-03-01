@@ -1,5 +1,5 @@
 const { override, fixBabelImports, addWebpackAlias } = require("customize-cra");
-// const path = require("path");
+const path = require("path");
 
 module.exports = override(
   fixBabelImports("import", {
@@ -8,6 +8,8 @@ module.exports = override(
     style: true,
   }),
   addWebpackAlias({
-    // layouts: path.resolve(__dirname, "./src/app/layouts"),
+    layouts: path.resolve(__dirname, "./src/app/layouts"),
+    components: path.resolve(__dirname, "./src/app/components"),
+    utils: path.resolve(__dirname, "./src/app/utils"),
   }),
 );
