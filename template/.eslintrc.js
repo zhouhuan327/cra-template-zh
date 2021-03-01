@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-// 配置文件更新了1.0.3
+
 const prettierOptions = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, ".prettierrc"), "utf8"),
 );

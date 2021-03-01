@@ -16,19 +16,19 @@ const log = {
 
 async function run() {
   try {
+    const packateInfo = getPactageInfo();
     const templatePath = path.join(root, "sync-script", tempFolderName);
 
-    const depsArray = getDepsArray();
-    if (!checkDeps(depsArray)) return;
+    if (!checkDeps(packateInfo)) return;
 
     if (fs.existsSync(templatePath)) {
       fs.removeSync(path.join(root, "sync-script", tempFolderName));
     }
 
-    const packageURL = await getTemplateUrl();
-    log.green(`[1/4] 📌 get npm address: ${packageURL}`);
+    const templateURL = await getTemplateUrl();
+    log.green(`[1/4] 📌 get npm address: ${templateURL}`);
 
-    const stream = hyperquest(packageURL);
+    const stream = hyperquest(templateURL);
     log.green(`[2/4] 🔍 Fetching package...`);
 
     await extractStream(stream, templatePath);
@@ -37,7 +37,7 @@ async function run() {
     // 这里不知道为什么直接执行会有几率找不到文件
     setTimeout(() => {
       log.green("[4/4] 🔨 copy files...");
-      copyFiles(templatePath, depsArray);
+      copyFiles(templatePath, packateInfo);
       fs.removeSync(path.join(root, "sync-script", tempFolderName));
     }, 100);
   } catch (e) {
@@ -45,20 +45,22 @@ async function run() {
   }
 }
 // 复制配置文件
-function copyFiles(templatePath, depsArray) {
+function copyFiles(templatePath, packateInfo) {
+  const deps = Object.keys(packateInfo.dependencies || {});
   const fileNames = [
     ".eslintrc.js",
     ".prettierrc",
     ".prettierignore",
     ".stylelintrc.json",
   ];
-  if(depsArray.includes('typescript')) {
-    fileNames.push("tsconfig.json")
+  if (deps.includes("typescript")) {
+    fileNames.push("tsconfig.json");
   }
   for (let filename of fileNames) {
     const filePath = path.join(templatePath, "template", filename);
     if (fs.existsSync(filePath)) {
       fs.copySync(filePath, path.join(root, filename));
+      log.green(` - copy ${filename}`);
     } else {
       log.red(filename + "not exist in template");
     }
@@ -79,7 +81,12 @@ function extractStream(stream, dest) {
     });
   });
 }
-function checkDeps(depsArray) {
+function checkDeps(packageInfo) {
+  const deps = Object.assign(
+    packageInfo.dependencies,
+    packageInfo.devDependencies,
+  );
+  const depsArray = Object.keys(deps);
   const notInstalled = [];
   const requireDeps = [
     "eslint",
@@ -111,18 +118,13 @@ function checkDeps(depsArray) {
   }
   return true;
 }
-// 获得当前项目所有的依赖
-function getDepsArray() {
+
+function getPactageInfo() {
   if (!fs.existsSync(path.join(root, "package.json"))) {
     throw new Error("package.json not found");
   }
   const obj = require(path.join(root, "package.json"));
-  const deps = Object.assign(obj.dependencies, obj.devDependencies);
-  const depArray = [];
-  for (let i in deps) {
-    depArray.push(i);
-  }
-  return depArray;
+  return obj;
 }
 
 function getTemplateUrl() {
