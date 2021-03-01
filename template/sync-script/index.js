@@ -3,43 +3,49 @@ const https = require("https");
 const unpack = require("tar-pack").unpack;
 const fs = require("fs-extra");
 const path = require("path");
-const chalk = require("chalk");
-
-const log = console.log;
 const tempFolderName = "tempFolder";
 const root = process.cwd();
+const log = {
+  green: content => {
+    console.log(`\x1B[32m${content}\x1B[0m`);
+  },
+  red: content => {
+    console.log(`\x1B[31m${content}\x1B[0m`);
+  },
+};
 
 async function run() {
   try {
     const templatePath = path.join(root, "sync-script", tempFolderName);
-    if (!fs.existsSync(path.join(root, "package.json"))) {
-      throw new Error("package.json not found");
-    }
+
+    const depsArray = getDepsArray();
+    if (!checkDeps(depsArray)) return;
+
     if (fs.existsSync(templatePath)) {
       fs.removeSync(path.join(root, "sync-script", tempFolderName));
     }
 
     const packageURL = await getTemplateUrl();
-    log(chalk.green(`[1/4] 📌 get npm address: ${packageURL}`));
+    log.green(`[1/4] 📌 get npm address: ${packageURL}`);
 
     const stream = hyperquest(packageURL);
-    log(chalk.green(`[2/4] 🔍 Fetching package...`));
+    log.green(`[2/4] 🔍 Fetching package...`);
 
     await extractStream(stream, templatePath);
-    log(chalk.green(`[3/4] ⚡️ unpack file...`));
+    log.green(`[3/4] ⚡️ unpack file...`);
 
     // 这里不知道为什么直接执行会有几率找不到文件
     setTimeout(() => {
-      log(chalk.green("[4/4] 🔨 copy files..."));
-      copyFiles(templatePath);
+      log.green("[4/4] 🔨 copy files...");
+      copyFiles(templatePath, depsArray);
       fs.removeSync(path.join(root, "sync-script", tempFolderName));
     }, 100);
   } catch (e) {
-    log(chalk.red(e));
+    log.red(e);
   }
 }
 // 复制配置文件
-function copyFiles(templatePath) {
+function copyFiles(templatePath, depsArray) {
   const fileNames = [
     ".eslintrc.js",
     ".prettierrc",
@@ -52,7 +58,7 @@ function copyFiles(templatePath) {
     if (fs.existsSync(filePath)) {
       fs.copySync(filePath, path.join(root, filename));
     } else {
-      log(filename + "not exist in template");
+      log.red(filename + "not exist in template");
     }
   }
 }
@@ -70,6 +76,51 @@ function extractStream(stream, dest) {
       resolve();
     });
   });
+}
+function checkDeps(depsArray) {
+  const notInstalled = [];
+  const requireDeps = [
+    "eslint",
+    "eslint-config-prettier",
+    "eslint-plugin-prettier",
+    "eslint-plugin-react-hooks",
+    "husky",
+    "lint-staged",
+    "prettier",
+    "prettier-stylelint",
+    "stylelint",
+    "stylelint-config-idiomatic-order",
+    "stylelint-config-recommended",
+    "stylelint-config-styled-components",
+    "stylelint-order",
+    "stylelint-prettier",
+    "stylelint-processor-styled-components",
+  ];
+  // 找到缺了哪些包
+  for (let dep of requireDeps) {
+    if (!depsArray.includes(dep)) {
+      notInstalled.push(dep);
+    }
+  }
+  if (notInstalled.length > 0) {
+    log.red("缺少依赖");
+    log.red(`请运行 yarn add ${notInstalled.join(" ")} -D`);
+    return false;
+  }
+  return true;
+}
+// 获得当前项目所有的依赖
+function getDepsArray() {
+  if (!fs.existsSync(path.join(root, "package.json"))) {
+    throw new Error("package.json not found");
+  }
+  const obj = require(path.join(root, "package.json"));
+  const deps = Object.assign(obj.dependencies, obj.devDependencies);
+  const depArray = [];
+  for (let i in deps) {
+    depArray.push(i);
+  }
+  return depArray;
 }
 
 function getTemplateUrl() {
