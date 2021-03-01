@@ -51,8 +51,10 @@ function copyFiles(templatePath, depsArray) {
     ".prettierrc",
     ".prettierignore",
     ".stylelintrc.json",
-    "tsconfig.json",
   ];
+  if(depsArray.includes('typescript')) {
+    fileNames.push("tsconfig.json")
+  }
   for (let filename of fileNames) {
     const filePath = path.join(templatePath, "template", filename);
     if (fs.existsSync(filePath)) {
